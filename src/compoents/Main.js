@@ -1,43 +1,34 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import styles from "./Main.module.css";
+import { useSelector, useDispatch } from "react-redux";
+import { getFilmsFetch, getGenresFetch } from "../ActionCreator";
 
-function Main({ favourites, setFavourites, search }) {
-  const [films, setFilms] = useState([]);
-  const [genres, setGenres] = useState([]);
-
+function Main() {
+  const inputValue = useSelector((state) => state.search.inputValue);
+  const films = useSelector((state) => state.filmsReducer.films);
+  const genres = useSelector((state) => state.genresReducer.genres);
+  const favourites = useSelector((state) => state.filmsReducer.favourites);
+  const loading = useSelector((state) => state.filmsReducer.loading);
+  console.log(loading);
+  const dispatch = useDispatch();
   useEffect(() => {
-    fetch(
-      "https://api.themoviedb.org/3/movie/popular/?api_key=1008ba9b0955f57726599ab52debc71b&language=en-US&page=1"
-    )
-      .then((response) => response.json())
-      .then((movieInfo) => {
-        setFilms(movieInfo.results);
-      });
-  }, [setFilms]);
+    dispatch(getFilmsFetch());
+    dispatch(getGenresFetch());
+  }, [dispatch]);
 
   const filterMovies = films.filter((movie) => {
-    return movie.title.toLowerCase().includes(search.toLowerCase());
+    return movie.title.toLowerCase().includes(inputValue.toLowerCase());
   });
 
-  useEffect(() => {
-    fetch(
-      "https://api.themoviedb.org/3/genre/movie/list?api_key=1008ba9b0955f57726599ab52debc71b&language=en-US"
-    )
-      .then((response) => response.json())
-      .then((genresInfo) => {
-        setGenres(genresInfo.genres);
-      });
-  }, [setGenres]);
-
   function handleOnClickAdd(movie) {
-    const newFavouriteListAdd = [...favourites, movie];
+    const newFavouriteList = [...favourites, movie];
     const saveToLocalStorage = (movie) => {
       localStorage.setItem("react-movie-app-favourites", JSON.stringify(movie));
     };
 
-    saveToLocalStorage(newFavouriteListAdd);
-    setFavourites(newFavouriteListAdd);
+    saveToLocalStorage(newFavouriteList);
+    dispatch({ type: "favouriteFilms", payload: newFavouriteList });
   }
 
   function handleOnClickRemove(movie) {
@@ -47,57 +38,67 @@ function Main({ favourites, setFavourites, search }) {
     const saveToLocalStorage = (movie) => {
       localStorage.setItem("react-movie-app-favourites", JSON.stringify(movie));
     };
-    setFavourites(newFavouriteList);
     saveToLocalStorage(newFavouriteList);
+    dispatch({ type: "favouriteFilms", payload: newFavouriteList });
   }
 
   return (
     <>
       <div className={styles.flex}>
-        {filterMovies.map((movie) => {
-          const isFavourite = Boolean(
-            favourites.find((favouriteFilm) => favouriteFilm.id === movie.id)
-          );
-          return (
-            <div className={styles.content}>
-              <div className={styles.movieBlock}>
-                <img
-                  className={styles.img}
-                  src={`https://image.tmdb.org/t/p/original/${movie.poster_path}`}
-                  alt=""
-                />
-                <div className={styles.movieInfoCss}>
-                  <h2>
-                    <Link
-                      className={styles.linkToInfoFilm}
-                      to={`/personalfilminfo/${movie.id}`}
+        {loading ? (
+          <div className={styles.ldsRing}>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+        ) : (
+          filterMovies.map((movie) => {
+            return (
+              <div className={styles.content}>
+                <div className={styles.movieBlock}>
+                  <img
+                    className={styles.img}
+                    src={`https://image.tmdb.org/t/p/original/${movie.poster_path}`}
+                    alt=""
+                  />
+                  <div className={styles.movieInfoCss}>
+                    <h2>
+                      <Link
+                        className={styles.linkToInfoFilm}
+                        to={`/personalfilminfo/${movie.id}`}
+                      >
+                        {movie.title}
+                      </Link>
+                    </h2>
+                    <p>
+                      Genre:
+                      {genres
+                        .filter((genre) => movie.genre_ids.includes(genre.id))
+                        .map((genre) => genre.name + " ")}
+                    </p>
+                    <button
+                      className={styles.btnAdd}
+                      onClick={
+                        !favourites.find(
+                          (favouriteFilm) => favouriteFilm.id === movie.id
+                        )
+                          ? () => handleOnClickAdd(movie)
+                          : () => handleOnClickRemove(movie)
+                      }
                     >
-                      {movie.title}
-                    </Link>
-                  </h2>
-                  <p>
-                    Genre:{" "}
-                    {genres
-                      .filter((genre) => movie.genre_ids.includes(genre.id))
-                      .map((genre) => genre.name + " ")}
-                  </p>
-                  <button
-                    className={styles.btnAdd}
-                    onClick={
-                      !isFavourite
-                        ? () => handleOnClickAdd(movie)
-                        : () => handleOnClickRemove(movie)
-                    }
-                  >
-                    {!isFavourite
-                      ? "Add to Favourites"
-                      : "remove from Favourites"}
-                  </button>
+                      {!favourites.find(
+                        (favouriteFilm) => favouriteFilm.id === movie.id
+                      )
+                        ? "Add to Favourites"
+                        : "remove from Favourites"}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </>
   );
