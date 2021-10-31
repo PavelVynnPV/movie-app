@@ -1,0 +1,36 @@
+body {
+    margin: 0;
+}
+.navbar {
+    background-color: black;
+    color: white;
+}
+.content {
+    display: flex;
+    justify-content: space-between;
+    width: 150vh;
+    margin: auto;
+    align-items: center;
+}
+.favourite_link {
+    font-size: 1.5rem;
+    text-decoration: none;
+    color: white;
+    align-items: center;
+}
+.favourite_link:hover {
+    color: yellow;
+}
+.popular {
+    font-size: 2rem;
+    margin: 0;
+    text-decoration: none;
+    color: #fff;
+}
+.popular:hover {
+    color: yellow;
+}
+.search {
+    padding: 0.5rem 0.5rem;
+    border-radius: 5px;
+}
