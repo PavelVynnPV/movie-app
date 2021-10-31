@@ -2,15 +2,19 @@ import React, { useEffect } from "react";
 import Navbar from "./Navbar";
 import styles from "./Main.module.css";
 import { Link } from "react-router-dom";
+import { useSelector, useDispatch} from 'react-redux'
 
-function FavouriteList({ favourites, setFavourites }) {
-  
+function FavouriteList() {
+
+  const favourites = useSelector((state) => state.filmsReducer.favourites)
+  const dispatch = useDispatch()
+
   useEffect(() => {
     const movieFavourites = JSON.parse(
       localStorage.getItem("react-movie-app-favourites")
     );
-    setFavourites(movieFavourites);
-  }, [setFavourites]);
+    dispatch({ type: 'favouriteFilms', payload: movieFavourites})
+  }, [dispatch]);
 
   return (
     <>
